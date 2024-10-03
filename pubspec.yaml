@@ -9,7 +9,7 @@ platforms:
   ios:
     
 environment:
-  sdk: '>=2.18.2 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:

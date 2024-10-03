@@ -1,0 +1,63 @@
+name: color_preview
+description: "A new Flutter package project."
+version: 0.0.1
+repository: https://github.com/den0206/ble_data_converter
+
+
+platforms:
+  android:
+  ios:
+    
+environment:
+  sdk: '>=2.18.2 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_colorpicker: '>=1.1.0 <2.0.0'  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+
+# dart pub publish --dry-run
+# dart pub publish 
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  

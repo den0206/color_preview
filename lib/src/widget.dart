@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 final class ColorPreview extends StatefulWidget {
@@ -17,45 +18,73 @@ final class ColorPreview extends StatefulWidget {
   State<ColorPreview> createState() => _ColorPreviewState();
 }
 
-class _ColorPreviewState extends State<ColorPreview> {
+class _ColorPreviewState extends State<ColorPreview>
+    with WidgetsBindingObserver {
   final OverlayPortalController _tooltipController = OverlayPortalController();
   late Widget currentWidget;
   late Color pickerColor;
 
   late Offset _moveBlockOffset;
-  late Size _moveRange;
-  late Size _moveBlockSize;
-
-  // initial Position
-  late Offset _initialOffset;
 
   bool isDrag = false;
 
+  bool get isPortrait {
+    return MediaQuery.of(context).orientation == Orientation.portrait;
+  }
+
+  // initial Position
+  Offset get _initialOffset {
+    return isPortrait
+        ? Offset(10, MediaQuery.of(context).size.height / 2)
+        : Offset(10, MediaQuery.of(context).size.height / 2);
+  }
+
+  Size get _screenSize {
+    return MediaQuery.of(context).size;
+  }
+
+  Size get _moveBlockSize {
+    final screenSize = MediaQuery.of(context).size;
+
+    return isPortrait
+        ? Size(screenSize.height * 0.3, screenSize.height * 0.4)
+        : Size(screenSize.width * 0.45, screenSize.width * 0.15);
+  }
+
   void clampMoveBlockOffset() {
     double clampedX =
-        _moveBlockOffset.dx.clamp(0, _moveRange.width - _moveBlockSize.width);
-    double clampedY =
-        _moveBlockOffset.dy.clamp(0, _moveRange.height - _moveBlockSize.height);
+        _moveBlockOffset.dx.clamp(0, _screenSize.width - _moveBlockSize.width);
+    double clampedY = _moveBlockOffset.dy
+        .clamp(0, _screenSize.height - _moveBlockSize.height);
     _moveBlockOffset = Offset(clampedX, clampedY);
   }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     pickerColor = widget.initialColor;
 
     currentWidget = widget.onColorChanged(pickerColor);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenSize = MediaQuery.of(context).size;
-
-      _moveRange = screenSize;
-      _moveBlockSize = Size(screenSize.height * 0.3, screenSize.height * 0.4);
-      _initialOffset = Offset(0, screenSize.height / 2);
-
       _moveBlockOffset = _initialOffset;
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeMetrics() {
+    debugPrint("Change Orientations");
+    // setState(() {
+    //   _moveBlockOffset = _initialOffset;
+    // });
   }
 
   @override
@@ -94,11 +123,46 @@ class _ColorPreviewState extends State<ColorPreview> {
                         color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                            color: Theme.of(context).colorScheme.surfaceBright),
+                          color: Theme.of(context).colorScheme.surfaceBright,
+                        ),
                       ),
-                      child: Text(
-                        pickerColor.value.toRadixString(16),
-                        style: Theme.of(context).textTheme.displayMedium,
+                      child: GestureDetector(
+                        onLongPress: () async {
+                          await _saveClipboard(
+                              pickerColor.value.toRadixString(16));
+
+                          if (context.mounted) {
+                            // show SnackBar
+                            final snackBar = SnackBar(
+                              backgroundColor:
+                                  Theme.of(context).primaryIconTheme.color,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              behavior: SnackBarBehavior.floating,
+                              padding: const EdgeInsetsDirectional.symmetric(
+                                  horizontal: 16),
+                              // margin: const EdgeInsetsDirectional.all(16),
+                              content: Text(
+                                "Copy Color!!",
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                              duration: const Duration(seconds: 2),
+                            );
+
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(snackBar);
+                          }
+                        },
+                        child: Text(
+                          pickerColor.value.toRadixString(16),
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayMedium!
+                              .copyWith(decoration: TextDecoration.underline),
+                        ),
                       ),
                     ),
                   ),
@@ -162,6 +226,11 @@ class _ColorPreviewState extends State<ColorPreview> {
       ],
     );
   }
+
+  Future<void> _saveClipboard(String colorText) async {
+    final data = ClipboardData(text: colorText);
+    await Clipboard.setData(data);
+  }
 }
 
 class _RepaintIndicator extends StatelessWidget {
@@ -210,6 +279,8 @@ class _ColorBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
     return Container(
       height: size.height,
       width: size.width,
@@ -219,17 +290,21 @@ class _ColorBoard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: SingleChildScrollView(
-        child: Column(
+        scrollDirection: isPortrait ? Axis.vertical : Axis.horizontal,
+        child: Flex(
+          direction: isPortrait ? Axis.vertical : Axis.horizontal,
           children: [
-            Container(
-              width: MediaQuery.of(context).size.height * 0.15,
-              height: 5,
-              decoration: const BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.all(Radius.circular(12.0))),
-            ),
+            if (isPortrait)
+              Container(
+                width: MediaQuery.of(context).size.height * 0.15,
+                height: 5,
+                decoration: const BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
+              ),
             const SizedBox(
               height: 10,
+              width: 10,
             ),
             ColorPicker(
                 colorPickerWidth: MediaQuery.of(context).size.height * .2,

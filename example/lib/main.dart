@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             ColorPreview(
               initialColor: _boxOneColor,
-              onColorChanged: (preview) {
+              onTargetWidget: (preview) {
                 return _SampleBox(color: preview);
               },
             ),
@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ColorPreview(
               initialColor: _boxTwoColor,
-              onColorChanged: (preview) {
+              onTargetWidget: (preview) {
                 return _SampleBox(color: preview);
               },
             ),
@@ -76,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ColorPreview(
               initialColor: _boxThreeColor,
-              onColorChanged: (preview) {
+              onTargetWidget: (preview) {
                 return _SampleBox(color: preview);
               },
             ),

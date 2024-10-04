@@ -7,12 +7,12 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 final class ColorPreview extends StatefulWidget {
   const ColorPreview({
     super.key,
-    required this.onColorChanged,
+    required this.onTargetWidget,
     this.initialColor = Colors.white,
   });
 
   final Color initialColor;
-  final Widget Function(Color color) onColorChanged;
+  final Widget Function(Color color) onTargetWidget;
 
   @override
   State<ColorPreview> createState() => _ColorPreviewState();
@@ -23,6 +23,7 @@ class _ColorPreviewState extends State<ColorPreview>
   final OverlayPortalController _tooltipController = OverlayPortalController();
   late Widget currentWidget;
   late Color pickerColor;
+  Orientation? _lastOrientation;
 
   late Offset _moveBlockOffset;
 
@@ -32,23 +33,21 @@ class _ColorPreviewState extends State<ColorPreview>
     return MediaQuery.of(context).orientation == Orientation.portrait;
   }
 
-  // initial Position
-  Offset get _initialOffset {
-    return isPortrait
-        ? Offset(10, MediaQuery.of(context).size.height / 2)
-        : Offset(10, MediaQuery.of(context).size.height / 2);
-  }
-
   Size get _screenSize {
     return MediaQuery.of(context).size;
   }
 
-  Size get _moveBlockSize {
-    final screenSize = MediaQuery.of(context).size;
-
+  // initial Position
+  Offset get _initialOffset {
     return isPortrait
-        ? Size(screenSize.height * 0.3, screenSize.height * 0.4)
-        : Size(screenSize.width * 0.45, screenSize.width * 0.15);
+        ? Offset(10, _screenSize.height / 2)
+        : Offset(10, _screenSize.height / 6);
+  }
+
+  Size get _moveBlockSize {
+    return isPortrait
+        ? Size(_screenSize.height * 0.3, _screenSize.height * 0.4)
+        : Size(_screenSize.width * 0.3, _screenSize.width * 0.35);
   }
 
   void clampMoveBlockOffset() {
@@ -66,7 +65,7 @@ class _ColorPreviewState extends State<ColorPreview>
 
     pickerColor = widget.initialColor;
 
-    currentWidget = widget.onColorChanged(pickerColor);
+    currentWidget = widget.onTargetWidget(pickerColor);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _moveBlockOffset = _initialOffset;
@@ -81,10 +80,16 @@ class _ColorPreviewState extends State<ColorPreview>
 
   @override
   void didChangeMetrics() {
-    debugPrint("Change Orientations");
-    // setState(() {
-    //   _moveBlockOffset = _initialOffset;
-    // });
+    final newOrientation = MediaQuery.of(context).orientation;
+    if (newOrientation != _lastOrientation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _moveBlockOffset = _initialOffset;
+        });
+      });
+
+      _lastOrientation = newOrientation;
+    }
   }
 
   @override
@@ -114,101 +119,47 @@ class _ColorPreviewState extends State<ColorPreview>
                       color: Colors.black.withOpacity(.1),
                     ),
                   ),
-                  Positioned(
-                    top: MediaQuery.of(context).size.height / 4,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.surfaceBright,
-                        ),
-                      ),
-                      child: GestureDetector(
-                        onLongPress: () async {
-                          await _saveClipboard(
-                              pickerColor.value.toRadixString(16));
-
-                          if (context.mounted) {
-                            // show SnackBar
-                            final snackBar = SnackBar(
-                              backgroundColor:
-                                  Theme.of(context).primaryIconTheme.color,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
-                              behavior: SnackBarBehavior.floating,
-                              padding: const EdgeInsetsDirectional.symmetric(
-                                  horizontal: 16),
-                              // margin: const EdgeInsetsDirectional.all(16),
-                              content: Text(
-                                "Copy Color!!",
-                                style: TextStyle(
-                                  color:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                ),
-                              ),
-                              duration: const Duration(seconds: 2),
-                            );
-
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(snackBar);
-                          }
-                        },
-                        child: Text(
-                          pickerColor.value.toRadixString(16),
-                          style: Theme.of(context)
-                              .textTheme
-                              .displayMedium!
-                              .copyWith(decoration: TextDecoration.underline),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _ColorLabelText(pickerColor: pickerColor),
                   Positioned(
                       top: _moveBlockOffset.dy,
                       left: _moveBlockOffset.dx,
                       child: LongPressDraggable(
-                        feedback: Container(),
-                        onDragStarted: () {
-                          setState(() {
-                            isDrag = true;
-                          });
-                        },
-                        onDragEnd: (_) {
-                          setState(() {
-                            isDrag = false;
-                          });
-                        },
-                        onDragUpdate: (details) {
-                          setState(() {
-                            _moveBlockOffset = Offset(
-                              _moveBlockOffset.dx + details.delta.dx,
-                              _moveBlockOffset.dy + details.delta.dy,
-                            );
-                            clampMoveBlockOffset();
-                          });
-                        },
-                        child: isDrag
-                            ? _ShakeWidget(
-                                child: _ColorBoard(
-                                  size: _moveBlockSize,
-                                  pickerColor: pickerColor,
-                                ),
-                              )
-                            : _ColorBoard(
-                                size: _moveBlockSize,
-                                pickerColor: pickerColor,
-                                onColorChanged: (value) {
-                                  setState(() {
+                          feedback: Container(),
+                          onDragStarted: () {
+                            setState(() {
+                              isDrag = true;
+                            });
+                          },
+                          onDragEnd: (_) {
+                            setState(() {
+                              isDrag = false;
+                            });
+                          },
+                          onDragUpdate: (details) {
+                            setState(() {
+                              _moveBlockOffset = Offset(
+                                _moveBlockOffset.dx + details.delta.dx,
+                                _moveBlockOffset.dy + details.delta.dy,
+                              );
+                              clampMoveBlockOffset();
+                            });
+                          },
+                          child: _ShakeWidget(
+                            isDrag: isDrag,
+                            child: _ColorBoard(
+                              size: _moveBlockSize,
+                              pickerColor: pickerColor,
+                              onColorChanged: (value) {
+                                setState(
+                                  () {
                                     pickerColor = value;
                                     currentWidget =
-                                        widget.onColorChanged(value);
-                                  });
-                                },
-                              ),
-                      )),
+                                        widget.onTargetWidget(value);
+                                  },
+                                );
+                              },
+                            ),
+                          ))),
                 ],
               );
             },
@@ -225,11 +176,6 @@ class _ColorPreviewState extends State<ColorPreview>
         ),
       ],
     );
-  }
-
-  Future<void> _saveClipboard(String colorText) async {
-    final data = ClipboardData(text: colorText);
-    await Clipboard.setData(data);
   }
 }
 
@@ -290,25 +236,19 @@ class _ColorBoard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: SingleChildScrollView(
-        scrollDirection: isPortrait ? Axis.vertical : Axis.horizontal,
-        child: Flex(
-          direction: isPortrait ? Axis.vertical : Axis.horizontal,
+        child: Column(
           children: [
-            if (isPortrait)
-              Container(
-                width: MediaQuery.of(context).size.height * 0.15,
-                height: 5,
-                decoration: const BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.all(Radius.circular(12.0))),
-              ),
+            _Notch(),
             const SizedBox(
               height: 10,
               width: 10,
             ),
             ColorPicker(
-                colorPickerWidth: MediaQuery.of(context).size.height * .2,
+                colorPickerWidth: isPortrait
+                    ? MediaQuery.of(context).size.height * .2
+                    : MediaQuery.of(context).size.width * .2,
                 pickerColor: pickerColor,
+                portraitOnly: true,
                 labelTypes: const [],
                 onColorChanged: onColorChanged ?? (_) {}),
           ],
@@ -318,13 +258,27 @@ class _ColorBoard extends StatelessWidget {
   }
 }
 
+class _Notch extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: MediaQuery.of(context).size.height * 0.15,
+      height: 5,
+      decoration: const BoxDecoration(
+          color: Colors.grey,
+          borderRadius: BorderRadius.all(Radius.circular(12.0))),
+    );
+  }
+}
+
 // 揺れるアニメーション
 class _ShakeWidget extends StatefulWidget {
   const _ShakeWidget({
     required this.child,
+    required this.isDrag,
   });
-
   final Widget child;
+  final bool isDrag;
 
   @override
   State<_ShakeWidget> createState() => _ShakeWidgetState();
@@ -351,15 +305,168 @@ class _ShakeWidgetState extends State<_ShakeWidget>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      child: widget.child,
-      builder: (context, child) {
-        return Transform.rotate(
-          angle: math.sin(_controller.value * 15 * math.pi) / 80,
-          child: child,
-        );
-      },
+    return !widget.isDrag
+        ? widget.child
+        : AnimatedBuilder(
+            animation: _controller,
+            child: widget.child,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: math.sin(_controller.value * 15 * math.pi) / 80,
+                child: child,
+              );
+            },
+          );
+  }
+}
+
+class _ColorLabelText extends StatefulWidget {
+  const _ColorLabelText({required this.pickerColor});
+
+  final Color pickerColor;
+
+  @override
+  State<_ColorLabelText> createState() => _ColorLabelTextState();
+}
+
+class _ColorLabelTextState extends State<_ColorLabelText>
+    with WidgetsBindingObserver {
+  Offset _textOffset = Offset.zero;
+  Orientation? _lastOrientation;
+  bool isDrag = false;
+
+  Size get _screenSize {
+    return MediaQuery.of(context).size;
+  }
+
+  Size get _containerSize => const Size(210, 80);
+
+  // initial Position
+  Offset get _initialOffset {
+    return Offset(_screenSize.width - _containerSize.width - 20,
+        MediaQuery.of(context).size.height / 4);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _textOffset = _initialOffset;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+  }
+
+  @override
+  void didChangeMetrics() {
+    final newOrientation = MediaQuery.of(context).orientation;
+    if (newOrientation != _lastOrientation) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _textOffset = _initialOffset;
+        });
+      });
+
+      _lastOrientation = newOrientation;
+    }
+  }
+
+  Future<void> _saveClipboard(String colorText) async {
+    final data = ClipboardData(text: colorText);
+    await Clipboard.setData(data);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: _textOffset.dy,
+      left: _textOffset.dx,
+      child: LongPressDraggable(
+        feedback: Container(),
+        onDragStarted: () {
+          setState(() {
+            isDrag = true;
+          });
+        },
+        onDragEnd: (_) {
+          setState(() {
+            isDrag = false;
+          });
+        },
+        onDragUpdate: (details) {
+          setState(() {
+            _textOffset = Offset(
+              _textOffset.dx + details.delta.dx,
+              _textOffset.dy + details.delta.dy,
+            );
+          });
+        },
+        child: _ShakeWidget(
+          isDrag: isDrag,
+          child: Container(
+            width: _containerSize.width,
+            height: _containerSize.height,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.surfaceBright,
+              ),
+            ),
+            child: Column(
+              children: [
+                _Notch(),
+                GestureDetector(
+                  onLongPress: () async {
+                    await _saveClipboard(
+                        widget.pickerColor.value.toRadixString(16));
+
+                    if (context.mounted) {
+                      // show SnackBar
+                      final snackBar = SnackBar(
+                        backgroundColor:
+                            Theme.of(context).primaryIconTheme.color,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        behavior: SnackBarBehavior.floating,
+                        padding: const EdgeInsetsDirectional.symmetric(
+                            horizontal: 16),
+                        // margin: const EdgeInsetsDirectional.all(16),
+                        content: Text(
+                          "Copy Color!!",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                        duration: const Duration(seconds: 2),
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    }
+                  },
+                  child: Text(
+                    widget.pickerColor.value.toRadixString(16),
+                    style: Theme.of(context)
+                        .textTheme
+                        .displayMedium!
+                        .copyWith(decoration: TextDecoration.underline),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

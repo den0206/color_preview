@@ -56,8 +56,8 @@ class _ColorBoardState extends State<ColorBoard> {
               ),
               ColorPicker(
                   colorPickerWidth: isPortrait
-                      ? _screenSize.height * .2
-                      : _screenSize.width * .2,
+                      ? _screenSize.height * .23
+                      : _screenSize.width * .23,
                   pickerColor: widget.pickerColor,
                   portraitOnly: true,
                   labelTypes: const [],

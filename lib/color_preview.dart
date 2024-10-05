@@ -1,3 +1,3 @@
 library color_preview;
 
-export 'src/widget.dart';
+export 'src/color_preview.dart';

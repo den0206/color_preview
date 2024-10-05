@@ -97,27 +97,38 @@ class ColorLabelTextState extends State<ColorLabelText> {
     await Clipboard.setData(data);
   }
 
+  String get colorValue {
+    return "0x${widget.pickerColor.value.toRadixString(16).padLeft(8, '0')}";
+  }
+
   Future<void> _showMessage(BuildContext context, String colorText) async {
     final snackBar = SnackBar(
-      backgroundColor: Theme.of(context).colorScheme.onSurfaceVariant, // 背景色を変更
-
-      elevation: 50,
+      backgroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20)), // 角を丸くする
       behavior: SnackBarBehavior.floating,
-      padding:
-          const EdgeInsets.symmetric(horizontal: 24, vertical: 16), // パディングを調整
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       content: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween, // コンテンツを左右に配置
         children: [
-          Text(
-            "Color Copied !", // メッセージを変更
-            style: TextStyle(
-              color: Theme.of(context).canvasColor,
-              fontWeight: FontWeight.bold, // 太字にする
+          RichText(
+            text: TextSpan(
+              text: 'Color($colorText) ',
+              style: DefaultTextStyle.of(context).style.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Color(int.parse(colorValue))),
+              children: <TextSpan>[
+                TextSpan(
+                  text: "Copied !",
+                  style: TextStyle(color: Theme.of(context).canvasColor),
+                )
+              ],
             ),
           ),
-          const Icon(Icons.check, color: Colors.green), // アイコンを追加
+          Icon(
+            Icons.check,
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ), // アイコンを追加
         ],
       ),
       duration: const Duration(seconds: 3), // 表示時間を変更
@@ -141,8 +152,7 @@ class ColorLabelTextState extends State<ColorLabelText> {
             _Notch(),
             GestureDetector(
               onLongPress: () async {
-                await _saveClipboard(
-                    widget.pickerColor.value.toRadixString(16));
+                await _saveClipboard("Color($colorValue)");
 
                 if (context.mounted) {
                   // show SnackBar
@@ -150,13 +160,16 @@ class ColorLabelTextState extends State<ColorLabelText> {
                       context, widget.pickerColor.value.toRadixString(16));
                 }
               },
-              child: Text(
-                widget.pickerColor.value.toRadixString(16),
-                style: Theme.of(context)
-                    .textTheme
-                    .displaySmall!
-                    .copyWith(decoration: TextDecoration.underline),
-                textScaler: TextScaler.noScaling,
+              child: FittedBox(
+                fit: BoxFit.fitWidth,
+                child: Text(
+                  colorValue,
+                  style: Theme.of(context).textTheme.displaySmall!.copyWith(
+                        decoration: TextDecoration.underline,
+                        // color: Color(int.parse(colorValue)),
+                      ),
+                  textScaler: TextScaler.noScaling,
+                ),
               ),
             ),
           ],

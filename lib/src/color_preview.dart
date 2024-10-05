@@ -7,10 +7,14 @@ final class ColorPreview extends StatefulWidget {
     super.key,
     required this.onTargetWidget,
     this.initialColor = Colors.white,
+    this.isEnable = true,
+    this.buttonOffset,
   });
 
   final Color initialColor;
   final Widget Function(Color color) onTargetWidget;
+  final bool isEnable;
+  final Offset? buttonOffset;
 
   @override
   State<ColorPreview> createState() => _ColorPreviewState();
@@ -20,6 +24,8 @@ class _ColorPreviewState extends State<ColorPreview> {
   final OverlayPortalController _tooltipController = OverlayPortalController();
   late Widget currentWidget;
   late Color pickerColor;
+
+  Size get _screenSize => MediaQuery.of(context).size;
 
   @override
   void initState() {
@@ -32,57 +38,60 @@ class _ColorPreviewState extends State<ColorPreview> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        currentWidget,
-        Positioned(
-          top: 5,
-          right: 5,
-          child: OverlayPortal(
-            controller: _tooltipController,
-            child: GestureDetector(
-              onTap: () {
-                _tooltipController.show();
-              },
-              child: _RepaintIndicator(
-                HSVColor.fromColor(pickerColor),
-                height: 30,
-                width: 30,
-              ),
-            ),
-            overlayChildBuilder: (context) {
-              return Stack(
-                children: [
-                  GestureDetector(
+    return !widget.isEnable
+        ? currentWidget
+        : Stack(
+            children: [
+              currentWidget,
+              Positioned(
+                top: widget.buttonOffset?.dy ?? 5,
+                left: widget.buttonOffset?.dx,
+                right: widget.buttonOffset?.dx == null ? 5 : null,
+                child: OverlayPortal(
+                  controller: _tooltipController,
+                  child: GestureDetector(
                     onTap: () {
-                      _tooltipController.hide();
+                      _tooltipController.show();
                     },
-                    child: Container(
-                      height: MediaQuery.of(context).size.height,
-                      width: MediaQuery.of(context).size.width,
-                      // 透明にする
-                      color: Colors.transparent,
+                    child: _RepaintIndicator(
+                      HSVColor.fromColor(pickerColor),
+                      height: 30,
+                      width: 30,
                     ),
                   ),
-                  ColorBoard(
-                    pickerColor: pickerColor,
-                    onColorChanged: (value) {
-                      setState(
-                        () {
-                          pickerColor = value;
-                          currentWidget = widget.onTargetWidget(value);
-                        },
-                      );
-                    },
-                  ),
-                  ColorLabelText(pickerColor: pickerColor),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
+                  overlayChildBuilder: (context) {
+                    return Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            _tooltipController.hide();
+                          },
+                          child: Container(
+                            height: _screenSize.height,
+                            width: _screenSize.width,
+                            // 透明にする
+                            color: Colors.transparent,
+                          ),
+                        ),
+                        ColorBoard(
+                          pickerColor: pickerColor,
+                          onColorChanged: (value) {
+                            setState(
+                              () {
+                                pickerColor = value;
+                                currentWidget = widget.onTargetWidget(value);
+                              },
+                            );
+                          },
+                        ),
+                        ColorLabelText(pickerColor: pickerColor),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
   }
 }
 

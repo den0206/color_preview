@@ -47,11 +47,13 @@ class _MyHomePageState extends State<MyHomePage> {
   final _boxTwoColor = Colors.green;
   final _boxThreeColor = Colors.blue;
 
+  bool get isPortrait =>
+      MediaQuery.of(context).orientation == Orientation.portrait;
+
   @override
   Widget build(BuildContext context) {
-    final isPortrait =
-        MediaQuery.of(context).orientation == Orientation.portrait;
     return Scaffold(
+      // backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
@@ -69,37 +71,43 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SizedBox(
         width: double.infinity,
         height: double.infinity,
-        child: Flex(
-          direction: isPortrait ? Axis.vertical : Axis.horizontal,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ColorPreview(
-              initialColor: _boxOneColor,
-              onTargetWidget: (preview) {
-                return _SampleBox(color: preview);
-              },
-            ),
-            SizedBox(
-              height: _space,
-              width: _space,
-            ),
-            ColorPreview(
-              initialColor: _boxTwoColor,
-              onTargetWidget: (preview) {
-                return _SampleBox(color: preview);
-              },
-            ),
-            SizedBox(
-              height: _space,
-              width: _space,
-            ),
-            ColorPreview(
-              initialColor: _boxThreeColor,
-              onTargetWidget: (preview) {
-                return _SampleBox(color: preview);
-              },
-            ),
-          ],
+        child: SingleChildScrollView(
+          scrollDirection: isPortrait ? Axis.vertical : Axis.horizontal,
+          child: Flex(
+            direction: isPortrait ? Axis.vertical : Axis.horizontal,
+            children: [
+              SizedBox(
+                height: _space,
+                width: _space,
+              ),
+              ColorPreview(
+                initialColor: _boxOneColor,
+                onTargetWidget: (preview) {
+                  return _SampleBox(color: preview);
+                },
+              ),
+              SizedBox(
+                height: _space,
+                width: _space,
+              ),
+              ColorPreview(
+                initialColor: _boxTwoColor,
+                onTargetWidget: (preview) {
+                  return _SampleBox(color: preview);
+                },
+              ),
+              SizedBox(
+                height: _space,
+                width: _space,
+              ),
+              ColorPreview(
+                initialColor: _boxThreeColor,
+                onTargetWidget: (preview) {
+                  return _SampleBox(color: preview);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

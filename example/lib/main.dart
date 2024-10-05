@@ -12,13 +12,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: title,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: MyHomePage(title: title),
+    ModeStuff modeNotifier = ModeStuff.instance;
+
+    return ValueListenableBuilder(
+      valueListenable: modeNotifier.theme,
+      builder: (context, ThemeMode mode, _) {
+        return MaterialApp(
+          title: title,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData.dark(),
+          themeMode: mode,
+          home: MyHomePage(title: title),
+        );
+      },
     );
   }
 }
@@ -46,6 +55,16 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [
+          Switch.adaptive(
+            activeColor: Theme.of(context).colorScheme.primary,
+            value: ModeStuff.instance.theme.value == ThemeMode.dark,
+            onChanged: (value) {
+              ModeStuff.instance
+                  .updateValue(value ? ThemeMode.dark : ThemeMode.light);
+            },
+          )
+        ],
       ),
       body: SizedBox(
         width: double.infinity,
@@ -103,5 +122,23 @@ class _SampleBox extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
     );
+  }
+}
+
+class ModeStuff {
+  static ModeStuff? _instance;
+
+  static ModeStuff get instance {
+    _instance ??= ModeStuff._init();
+
+    return _instance!;
+  }
+
+  ModeStuff._init();
+
+  ValueNotifier<ThemeMode> theme = ValueNotifier<ThemeMode>(ThemeMode.light);
+
+  void updateValue(ThemeMode mode) {
+    theme.value = mode;
   }
 }

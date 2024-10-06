@@ -2,7 +2,31 @@ import 'package:color_preview/src/draggble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
+///
+///``` dart
+///import 'package:color_preview/color_preview.dart';
+///...
+///  // Wrap Target widget with [ColorPreview].
+///ColorPreview(
+///  // initial Color
+///  initialColor: Colors.red,
+///  onTargetWidget: (preview) {
+///  // preview is Picked Color
+///     return Container(
+///      height: 100,
+///      width: 100,
+///      decoration: BoxDecoration(
+///        // Specify a color for the property
+///        color: preview,
+///      ),
+///    );
+///  },
+///),
+///```
 final class ColorPreview extends StatefulWidget {
+  /// Wrap Target widget with [ColorPreview].
+  ///
+  /// * If [buttonOffset] is null,Default position is shown in the upper right.
   const ColorPreview({
     super.key,
     required this.onTargetWidget,

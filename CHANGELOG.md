@@ -1,3 +1,5 @@
 ## 0.9.0
-
-- Initial version.
+- Initial Release.
+  - `ColorPreview`
+    - Orientation support
+    - DarkMode support

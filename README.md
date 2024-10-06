@@ -16,9 +16,8 @@ and the Flutter guide for
 ### Packages for easy confirmation of widget colors, Intuitive design.
 
 
-|Intuitive design|
-|---|
-|<video src="https://github.com/user-attachments/assets/55b204ce-4cd0-464a-b971-46a5ad186e4f" auto-play="true" loop="loop" muted="muted" plays-inline="true"></video>|
+<img src="gif/color_preview.gif" alt="demo" width="300" />
+
 
 ## Features
 - Real-time color adjustment for design

@@ -21,8 +21,15 @@ and the Flutter guide for
 
 ## Features
 - Real-time color adjustment for design
-- Orientation support
-- DarkMode support
+
+  
+### Orientation support
+<img src="https://github.com/user-attachments/assets/54094522-29c2-48ba-95b2-70c52cb45295" width="50%" />
+
+
+### DarkMode support
+<img src="https://github.com/user-attachments/assets/b53a326e-5bb6-401d-ad3f-44f58d6050d8" width="300" />
+
 
 Recommendation: Do not include this package in production distributions due to the possibility of unexpected behavior.
 
